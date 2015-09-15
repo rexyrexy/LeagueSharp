@@ -109,8 +109,6 @@ namespace Tek_Atan_Rengar
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.AfterAttack += AfterAttack;
             Obj_AI_Base.OnProcessSpellCast += oncast;
-
-            Console.WriteLine("|Tek Atan Rengar| Script Yuklendi !");
         }
 
         #region ComboDamage
@@ -176,7 +174,6 @@ namespace Tek_Atan_Rengar
                     W.Cast();
                 }
             }
-            Console.WriteLine("|Tek Atan Rengar| Oyun Basladi !");
         }
 
         public static void AfterAttack(AttackableUnit unit, AttackableUnit target)
@@ -186,28 +183,21 @@ namespace Tek_Atan_Rengar
             {
                 if (mode == "Menzil disinda E" && Player.Mana == 5)
                 {
-                    if (HasItem())
-                        CastItem();
-                }
-                else if (Q.IsReady())
-                {
-                    Q.Cast();
-                }
-                else if (HasItem())
-                {
-                    CastItem();
-                }
-                else if (E.IsReady())
-                {
-                    var targetE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                    if (E.IsReady() && targetE.IsValidTarget() && !targetE.IsZombie)
+                    if (Q.IsReady())
                     {
-                        E.Cast(targetE);
+                        Q.Cast();
                     }
-                    foreach (var tar in HeroManager.Enemies.Where(x => x.IsValidTarget(E.Range) && !x.IsZombie))
+                    else if (E.IsReady())
                     {
-                        if (E.IsReady())
-                            E.Cast(tar);
+                        var targetE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+                        if (E.IsReady() && targetE.IsValidTarget() && !targetE.IsZombie)
+                        {
+                            E.Cast(targetE);
+                        }
+                        foreach (var tar in HeroManager.Enemies.Where(x => x.IsValidTarget(E.Range) && !x.IsZombie))
+                        {
+                            if (E.IsReady()) E.Cast(tar);
+                        }
                     }
                 }
             }
@@ -241,10 +231,6 @@ namespace Tek_Atan_Rengar
                 {
                     Utility.DelayAction.Add((int)(/*Player.AttackCastDelay * 1000 + */args.Duration - 100 - Game.Ping / 2), CastItem);
                 }
-                else
-                {
-                    CastItem();
-                }
             }
             //Game.Say("dash");
         }
@@ -263,6 +249,7 @@ namespace Tek_Atan_Rengar
                         if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
                         {
                             Q.Cast();
+                            CheckAndCastItem();
                         }
                     }
                     if (Orbwalking.CanMove(extrawindup))
@@ -291,11 +278,13 @@ namespace Tek_Atan_Rengar
                         if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack())
                         {
                             Q.Cast();
+                            CheckAndCastItem();
                         }
                     }
                     if (Q.IsReady() && Player.IsDashing())
                     {
                         Q.Cast();
+                        CheckAndCastItem();
                     }
 
                     if (Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) == 0 && !Player.HasBuff("rengarpassivebuff") && !Player.IsDashing())
@@ -322,6 +311,7 @@ namespace Tek_Atan_Rengar
                         if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
                         {
                             Q.Cast();
+                            CheckAndCastItem();
                         }
                     }
                     if (Orbwalking.CanMove(extrawindup))
@@ -350,11 +340,13 @@ namespace Tek_Atan_Rengar
                         if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack())
                         {
                             Q.Cast();
+                            CheckAndCastItem();
                         }
                     }
                     if (Q.IsReady() && Player.IsDashing())
                     {
                         Q.Cast();
+                        CheckAndCastItem();
                     }
                 }
             }
@@ -408,6 +400,18 @@ namespace Tek_Atan_Rengar
                 ItemData.Tiamat_Melee_Only.GetItem().Cast();
             if (ItemData.Ravenous_Hydra_Melee_Only.GetItem().IsReady())
                 ItemData.Ravenous_Hydra_Melee_Only.GetItem().Cast();
+        }
+
+        public static void CheckAndCastItem()
+        {
+            if (!HasItem())
+            {
+                return;
+            }
+            if (HasItem())
+            {
+                CastItem();
+            }
         }
         private static Notification notifyselected = new Notification("null");
     }
