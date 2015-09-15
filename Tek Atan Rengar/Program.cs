@@ -38,6 +38,7 @@ namespace Tek_Atan_Rengar
         {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
             Drawing.OnDraw += Drawing_OnDraw;
+            Game.OnUpdate += Game_OnGameUpdate;
         }
 
         private static void Drawing_OnDraw(EventArgs args)
