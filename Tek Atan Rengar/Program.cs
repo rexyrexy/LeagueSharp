@@ -69,7 +69,7 @@ namespace Tek_Atan_Rengar
                         Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
                         Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
                         Color.Green,
-                        "Ölemez");
+                        "No Kill");
             }
         }
 
@@ -101,14 +101,8 @@ namespace Tek_Atan_Rengar
                     new MenuItem("ComboMode", "Combo Modu").SetValue(
                         new StringList(new[] { "Sadece Q", "Menzil disinda E" })));
             Menu.SubMenu("Otomatik Can")
-                .AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(22, 100, 0)));
+                .AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(22, 100, 22)));
             Menu.AddToMainMenu();
-
-            /* if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-             {
-                 Combo();
-             }
-             */
 
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             Obj_AI_Base.OnBuffRemove += Obj_AI_Base_OnBuffRemove;
@@ -162,18 +156,23 @@ namespace Tek_Atan_Rengar
         public static void Game_OnGameUpdate(EventArgs args)
         {
             if (Player.IsDead) return;
-            //if (Player.HasBuff("rengarqbase") || Player.HasBuff("rengarqemp"))
-            //{
-            //    if (Orbwalking.CanMove(extrawindup + 100))
-            //    {
-            //        Orbwalking.ResetAutoAttackTimer();
-            //    }
-            //}
+
+            var hp = Menu.Item("autoheal").GetValue<Slider>().Value;
+
             DrawSelectedTarget();
 
             if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
                 Combo();
+            }
+
+
+            if (Player.Mana == 5 && W.IsReady())
+            {
+                if ((Player.Health / Player.MaxHealth * 100) < hp)
+                {
+                    W.Cast();
+                }
             }
         }
 
@@ -226,7 +225,6 @@ namespace Tek_Atan_Rengar
             Obj_AI_Hero eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
             Obj_AI_Base qTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
             Obj_AI_Base wTarget = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
-            var hp = Menu.Item("autoheal").GetValue<Slider>().Value;
 
             if (mode == "Menzil disinda E")
             {
