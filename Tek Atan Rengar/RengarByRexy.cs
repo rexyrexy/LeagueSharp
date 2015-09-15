@@ -12,7 +12,7 @@ using ItemData = LeagueSharp.Common.Data.ItemData;
 
 namespace Tek_Atan_Rengar
 {
-    internal class Program
+    internal class RengarByRexy
     {
         private static String championName = "Rengar";
 
@@ -89,8 +89,8 @@ namespace Tek_Atan_Rengar
             E.SetSkillshot(0.25f, 70, 1500, true, SkillshotType.SkillshotLine);
             E.MinHitChance = HitChance.Medium;
 
-            Notifications.AddNotification(string.Format("Tek Atan Rengar Yuklendi !"), 5500);
-            Notifications.AddNotification(string.Format("Berk Gunay"), 5500);
+            Notifications.AddNotification(string.Format("Tek Atan Rengar Yuklendi !"), 10500);
+            Notifications.AddNotification(string.Format("Coded-by-Rexy-"), 10500);
             Menu = new Menu("Tek Atan Rengar", "Tek Atan Rengar", true);
             var orbwalkerMenu = new Menu("Orbwalker", "Orbwalker");
             orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
@@ -109,6 +109,8 @@ namespace Tek_Atan_Rengar
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.AfterAttack += AfterAttack;
             Obj_AI_Base.OnProcessSpellCast += oncast;
+
+            Console.WriteLine("|Tek Atan Rengar| Script Yuklendi !");
         }
 
         #region ComboDamage
@@ -174,6 +176,7 @@ namespace Tek_Atan_Rengar
                     W.Cast();
                 }
             }
+            Console.WriteLine("|Tek Atan Rengar| Oyun Basladi !");
         }
 
         public static void AfterAttack(AttackableUnit unit, AttackableUnit target)
@@ -255,10 +258,12 @@ namespace Tek_Atan_Rengar
             {
                 if (Player.Mana < 5)
                 {
-                    var targetW = TargetSelector.GetTarget(500, TargetSelector.DamageType.Physical);
-                    if (W.IsReady() && targetW.IsValidTarget() && !targetW.IsZombie)
+                    if (Q.IsReady() && Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) != 0)
                     {
-                        W.Cast(targetW);
+                        if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
+                        {
+                            Q.Cast();
+                        }
                     }
                     if (Orbwalking.CanMove(extrawindup))
                     {
@@ -273,13 +278,11 @@ namespace Tek_Atan_Rengar
                                 E.Cast(target);
                         }
                     }
-                    if (Q.IsReady() && Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) != 0)
+                    var targetW = TargetSelector.GetTarget(500, TargetSelector.DamageType.Physical);
+                    if (W.IsReady() && targetW.IsValidTarget() && !targetW.IsZombie)
                     {
-                        if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
-                        {
-                            Q.Cast();
-                        }
-                    }
+                        W.Cast(targetW);
+                    } 
                 }
                 else
                 {
@@ -314,10 +317,12 @@ namespace Tek_Atan_Rengar
             {
                 if (Player.Mana < 5)
                 {
-                    var targetW = TargetSelector.GetTarget(500, TargetSelector.DamageType.Physical);
-                    if (W.IsReady() && targetW.IsValidTarget() && !targetW.IsZombie)
+                    if (Q.IsReady() && Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) != 0)
                     {
-                        W.Cast(targetW);
+                        if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
+                        {
+                            Q.Cast();
+                        }
                     }
                     if (Orbwalking.CanMove(extrawindup))
                     {
@@ -332,12 +337,10 @@ namespace Tek_Atan_Rengar
                                 E.Cast(target);
                         }
                     }
-                    if (Q.IsReady() && Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) != 0)
+                    var targetW = TargetSelector.GetTarget(500, TargetSelector.DamageType.Physical);
+                    if (W.IsReady() && targetW.IsValidTarget() && !targetW.IsZombie)
                     {
-                        if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
-                        {
-                            Q.Cast();
-                        }
+                        W.Cast(targetW);
                     }
                 }
                 else
