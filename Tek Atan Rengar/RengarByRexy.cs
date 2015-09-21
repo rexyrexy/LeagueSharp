@@ -22,8 +22,7 @@ namespace Tek_Atan_Rengar
 
         private static Orbwalking.Orbwalker orbwalker;
 
-        private static Spell Q, W, E;
-
+        private static Spell Q, W, E, R;
         private static string mode
         {
             get
@@ -45,6 +44,7 @@ namespace Tek_Atan_Rengar
         {
             foreach (
                 var enemyVisible in ObjectManager.Get<Obj_AI_Hero>().Where(enemyVisible => enemyVisible.IsValidTarget())
+                 
                 )
             {
                 if (ComboDamage(enemyVisible) > enemyVisible.Health)
@@ -53,23 +53,30 @@ namespace Tek_Atan_Rengar
                         Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
                         Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
                         Color.Red,
-                        "Teq");
+                        "Direk Teq");
                 }
-                else if (ComboDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2
-                         > enemyVisible.Health)
+                else if (ComboDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2 > enemyVisible.Health)
+                {
+                    Drawing.DrawText(
+                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
+                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
+                        Color.DarkOrange,
+                        "Combo + 2 AA = Teq");
+                }
+                else if (ComboDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 5 > enemyVisible.Health)
                 {
                     Drawing.DrawText(
                         Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
                         Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
                         Color.Orange,
-                        "Combo + 2 AA");
+                        "Ulti Combo = Teq");
                 }
                 else
                     Drawing.DrawText(
                         Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
                         Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
                         Color.Green,
-                        "No Kill");
+                        "Alamazsin");
             }
         }
 
@@ -85,6 +92,7 @@ namespace Tek_Atan_Rengar
             Q = new Spell(SpellSlot.Q, 250);
             W = new Spell(SpellSlot.W, 350);
             E = new Spell(SpellSlot.E, 1000);
+            R = new Spell(SpellSlot.R, 1500);
 
             E.SetSkillshot(0.25f, 70, 1500, true, SkillshotType.SkillshotLine);
             E.MinHitChance = HitChance.Medium;
@@ -126,9 +134,21 @@ namespace Tek_Atan_Rengar
             damage += (damage - ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite));
             return (float)damage;
         }
-
         #endregion
-
+        private static float PrioDamage(Obj_AI_Base enemy)
+        {
+            var damage = 0d;
+            var _igniteSlot = Player.GetSpellSlot("SummonerDot");
+            if (_igniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(_igniteSlot) == SpellState.Ready) damage += ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
+            if (Items.HasItem(3077) && Items.CanUseItem(3077)) damage += Player.GetItemDamage(enemy, Damage.DamageItems.Tiamat);
+            if (Items.HasItem(3074) && Items.CanUseItem(3074)) damage += Player.GetItemDamage(enemy, Damage.DamageItems.Hydra);
+            if (Q.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+            if (Q.IsReady()) damage += (Player.GetSpellDamage(enemy, SpellSlot.Q) / 1.5 );
+            if (W.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+            if (E.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.E);
+            damage += (damage - ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite));
+            return (float)damage;
+        }
         private static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
             if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && !Player.HasBuff("rengarpassivebuff")
@@ -183,10 +203,16 @@ namespace Tek_Atan_Rengar
             {
                 if (mode == "Menzil disinda E" && Player.Mana == 5)
                 {
-                    if (Q.IsReady())
+                    CheckAndCastItem();
+                }
+                else if (Q.IsReady())
                     {
                         Q.Cast();
                     }
+                else if (HasItem())
+                {
+                    CastItem();
+                }
                     else if (E.IsReady())
                     {
                         var targetE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
@@ -199,7 +225,8 @@ namespace Tek_Atan_Rengar
                             if (E.IsReady()) E.Cast(tar);
                         }
                     }
-                }
+                
+
             }
         }
 
@@ -223,16 +250,21 @@ namespace Tek_Atan_Rengar
         }
         public static void Unit_OnDash(Obj_AI_Base sender, Dash.DashItem args)
         {
-            if (!sender.IsMe)
-                return;
-            if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && HasItem())
             {
-                if (args.Duration - 100 - Game.Ping / 2 > 0)
+                if (!sender.IsMe)
+                    return;
+                if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && HasItem())
                 {
-                    Utility.DelayAction.Add((int)(/*Player.AttackCastDelay * 1000 + */args.Duration - 100 - Game.Ping / 2), CastItem);
+                    if (args.Duration - 100 - Game.Ping / 2 > 0)
+                    {
+                        Utility.DelayAction.Add((int)(/*Player.AttackCastDelay * 1000 + */args.Duration - 100 - Game.Ping / 2), CastItem);
+                    }
+                    else
+                    {
+                        CastItem();
+                    }
                 }
             }
-            //Game.Say("dash");
         }
         private static void Combo()
         {
@@ -249,7 +281,6 @@ namespace Tek_Atan_Rengar
                         if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
                         {
                             Q.Cast();
-                            CheckAndCastItem();
                         }
                     }
                     if (Orbwalking.CanMove(extrawindup))
@@ -278,13 +309,11 @@ namespace Tek_Atan_Rengar
                         if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack())
                         {
                             Q.Cast();
-                            CheckAndCastItem();
                         }
                     }
                     if (Q.IsReady() && Player.IsDashing())
                     {
                         Q.Cast();
-                        CheckAndCastItem();
                     }
 
                     if (Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) == 0 && !Player.HasBuff("rengarpassivebuff") && !Player.IsDashing())
@@ -311,7 +340,6 @@ namespace Tek_Atan_Rengar
                         if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
                         {
                             Q.Cast();
-                            CheckAndCastItem();
                         }
                     }
                     if (Orbwalking.CanMove(extrawindup))
@@ -340,13 +368,11 @@ namespace Tek_Atan_Rengar
                         if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack())
                         {
                             Q.Cast();
-                            CheckAndCastItem();
                         }
                     }
                     if (Q.IsReady() && Player.IsDashing())
                     {
                         Q.Cast();
-                        CheckAndCastItem();
                     }
                 }
             }
@@ -404,10 +430,6 @@ namespace Tek_Atan_Rengar
 
         public static void CheckAndCastItem()
         {
-            if (!HasItem())
-            {
-                return;
-            }
             if (HasItem())
             {
                 CastItem();
