@@ -31,8 +31,6 @@ namespace Tek_Atan_Rengar
             }
         }
 
-        private static int extrawindup = 50;
-
         private static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
@@ -44,32 +42,48 @@ namespace Tek_Atan_Rengar
         {
             foreach (
                 var enemyVisible in ObjectManager.Get<Obj_AI_Hero>().Where(enemyVisible => enemyVisible.IsValidTarget())
-                 
                 )
             {
-                if (ComboDamage(enemyVisible) > enemyVisible.Health)
+                if (Player.HasBuff("rengarr") && PrioDamage(enemyVisible) > enemyVisible.Health)
                 {
                     Drawing.DrawText(
                         Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
                         Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
                         Color.Red,
-                        "Direk Teq");
+                        "Ulti Combo TEQ");
                 }
-                else if (ComboDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2 > enemyVisible.Health)
+                else if (Player.HasBuff("rengarr") && PrioDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2 > enemyVisible.Health)
                 {
                     Drawing.DrawText(
                         Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
                         Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
                         Color.DarkOrange,
-                        "Combo + 2 AA = Teq");
+                        "Ulti Combo KILL");
                 }
-                else if (ComboDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 5 > enemyVisible.Health)
+
+                else if (Player.HasBuff("rengarr") && PrioDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 3.65 > enemyVisible.Health)
                 {
                     Drawing.DrawText(
                         Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
                         Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
-                        Color.Orange,
-                        "Ulti Combo = Teq");
+                        Color.DarkCyan,
+                        "Ulti Combo Orta KILL");
+                }
+                if (ComboDamage(enemyVisible) > enemyVisible.Health && !Player.HasBuff("rengarr"))
+                {
+                    Drawing.DrawText(
+                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
+                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
+                        Color.Red,
+                        "Direk Combo");
+                }
+                else if (ComboDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2.6 > enemyVisible.Health && !Player.HasBuff("rengarr"))
+                {
+                    Drawing.DrawText(
+                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
+                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
+                        Color.DarkOrange,
+                        "Combo + Tiamat = Teq");
                 }
                 else
                     Drawing.DrawText(
@@ -98,24 +112,22 @@ namespace Tek_Atan_Rengar
             E.MinHitChance = HitChance.Medium;
 
             Notifications.AddNotification(string.Format("Tek Atan Rengar Yuklendi !"), 10500);
-            Notifications.AddNotification(string.Format("Coded-by-Rexy-"), 10500);
+            Notifications.AddNotification(string.Format("Coded by Rexy-"), 10500);
             Menu = new Menu("Tek Atan Rengar", "Tek Atan Rengar", true);
             var orbwalkerMenu = new Menu("Orbwalker", "Orbwalker");
             orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
             Menu.AddSubMenu(orbwalkerMenu);
-            TargetSelector.AddToMenu(Menu);
             Menu.SubMenu("Combo Modu")
                 .AddItem(
                     new MenuItem("ComboMode", "Combo Modu").SetValue(
-                        new StringList(new[] { "Sadece Q", "Menzil disinda E" })));
+                        new StringList(new[] { "TEQ", "LANE" })));
             Menu.SubMenu("Otomatik Can")
-                .AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(22, 100, 22)));
+                .AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(30, 100, 22)));
+            var kıredit = new Menu("Coded by Rexy", "Coded by Rexy");
+            Menu.AddSubMenu(kıredit);
             Menu.AddToMainMenu();
-
-            Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
-            Obj_AI_Base.OnBuffRemove += Obj_AI_Base_OnBuffRemove;
+            
             Game.OnUpdate += Game_OnGameUpdate;
-            Orbwalking.AfterAttack += AfterAttack;
             Obj_AI_Base.OnProcessSpellCast += oncast;
         }
 
@@ -149,30 +161,6 @@ namespace Tek_Atan_Rengar
             damage += (damage - ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite));
             return (float)damage;
         }
-        private static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
-        {
-            if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && !Player.HasBuff("rengarpassivebuff")
-                && Q.IsReady() && !(Player.Mana == 5))
-            {
-                var x = Prediction.GetPrediction(args.Target as Obj_AI_Base, Player.AttackCastDelay + 0.04f);
-                if (Player.Distance(x.UnitPosition)
-                    <= Player.BoundingRadius + Player.AttackRange + args.Target.BoundingRadius)
-                {
-                    args.Process = false;
-                    Q.Cast();
-                }
-            }
-        }
-
-        private static void Obj_AI_Base_OnBuffRemove(Obj_AI_Base sender, Obj_AI_BaseBuffRemoveEventArgs args)
-        {
-            if (!sender.IsMe) return;
-            if (args.Buff.Name == "rengarqbase" || args.Buff.Name == "rengarqemp")
-            {
-
-            }
-        }
-
         public static void Game_OnGameUpdate(EventArgs args)
         {
             if (Player.IsDead) return;
@@ -186,7 +174,6 @@ namespace Tek_Atan_Rengar
                 Combo();
             }
 
-
             if (Player.Mana == 5 && W.IsReady())
             {
                 if ((Player.Health / Player.MaxHealth * 100) < hp)
@@ -195,189 +182,157 @@ namespace Tek_Atan_Rengar
                 }
             }
         }
-
-        public static void AfterAttack(AttackableUnit unit, AttackableUnit target)
-        {
-            if (!unit.IsMe) return;
-            if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-            {
-                if (mode == "Menzil disinda E" && Player.Mana == 5)
-                {
-                    CheckAndCastItem();
-                }
-                else if (Q.IsReady())
-                    {
-                        Q.Cast();
-                    }
-                else if (HasItem())
-                {
-                    CastItem();
-                }
-                    else if (E.IsReady())
-                    {
-                        var targetE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                        if (E.IsReady() && targetE.IsValidTarget() && !targetE.IsZombie)
-                        {
-                            E.Cast(targetE);
-                        }
-                        foreach (var tar in HeroManager.Enemies.Where(x => x.IsValidTarget(E.Range) && !x.IsZombie))
-                        {
-                            if (E.IsReady()) E.Cast(tar);
-                        }
-                    }
-                
-
-            }
-        }
-
         public static void oncast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             var spell = args.SData;
             if (!sender.IsMe)
                 return;
-            //Game.Say(spell.Name);
             if (spell.Name.ToLower().Contains("rengarq"))
             {
-                //Game.PrintChat("reset");
                 Orbwalking.ResetAutoAttackTimer();
             }
-            //if (spell.Name.ToLower().Contains("rengarw")) ;
-            if (spell.Name.ToLower().Contains("rengare"))
-                if (Orbwalking.LastAATick < Utils.GameTimeTickCount - Game.Ping / 2 && Utils.GameTimeTickCount - Game.Ping / 2 < Orbwalking.LastAATick + Player.AttackCastDelay * 1000 + 40)
-                {
-                    Orbwalking.ResetAutoAttackTimer();
-                }
-        }
-        public static void Unit_OnDash(Obj_AI_Base sender, Dash.DashItem args)
-        {
+            if (ObjectManager.Player.HasBuff("rengarqbase") || ObjectManager.Player.HasBuff("rengarqemp"))
             {
-                if (!sender.IsMe)
-                    return;
-                if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && HasItem())
-                {
-                    if (args.Duration - 100 - Game.Ping / 2 > 0)
-                    {
-                        Utility.DelayAction.Add((int)(/*Player.AttackCastDelay * 1000 + */args.Duration - 100 - Game.Ping / 2), CastItem);
-                    }
-                    else
-                    {
-                        CastItem();
-                    }
-                }
+                Orbwalking.ResetAutoAttackTimer();
             }
         }
         private static void Combo()
         {
-            Obj_AI_Hero eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-            Obj_AI_Base qTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-            Obj_AI_Base wTarget = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
+            var searchtarget = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
+            var closetarget = TargetSelector.GetTarget(350, TargetSelector.DamageType.Physical);
 
-            if (mode == "Menzil disinda E")
+            if (searchtarget.IsValidTarget(500))
             {
-                if (Player.Mana < 5)
-                {
-                    if (Q.IsReady() && Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) != 0)
-                    {
-                        if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
-                        {
-                            Q.Cast();
-                        }
-                    }
-                    if (Orbwalking.CanMove(extrawindup))
-                    {
-                        var targetE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                        if (E.IsReady() && targetE.IsValidTarget() && !targetE.IsZombie)
-                        {
-                            E.Cast(targetE);
-                        }
-                        foreach (var target in HeroManager.Enemies.Where(x => x.IsValidTarget(E.Range) && !x.IsZombie))
-                        {
-                            if (E.IsReady())
-                                E.Cast(target);
-                        }
-                    }
-                    var targetW = TargetSelector.GetTarget(500, TargetSelector.DamageType.Physical);
-                    if (W.IsReady() && targetW.IsValidTarget() && !targetW.IsZombie)
-                    {
-                        W.Cast(targetW);
-                    } 
-                }
-                else
-                {
-                    if (Q.IsReady() && Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) != 0)
-                    {
-                        if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack())
-                        {
-                            Q.Cast();
-                        }
-                    }
-                    if (Q.IsReady() && Player.IsDashing())
-                    {
-                        Q.Cast();
-                    }
+                Items.UseItem(3144, searchtarget);
+                Items.UseItem(3146, searchtarget);
+                Items.UseItem(3153, searchtarget);
+            }
+            if (closetarget.IsValidTarget(350))
+            {
+                Items.UseItem(3074);
+                Items.UseItem(3077);
+                Items.UseItem(3143);
+            }
 
-                    if (Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) == 0 && !Player.HasBuff("rengarpassivebuff") && !Player.IsDashing())
+            if (ObjectManager.Player.Mana <= 4)
+            {
+                if (searchtarget.IsValidTarget(1000) && (ObjectManager.Player.HasBuff("rengarpassivebuff") || ObjectManager.Player.HasBuff("rengarbushspeedbuff") || ObjectManager.Player.HasBuff("rengarr")))
+                {
+                    Q.Cast();
+                }
+                if (searchtarget.IsValidTarget(800) && (ObjectManager.Player.HasBuff("rengarpassivebuff") || ObjectManager.Player.HasBuff("rengarbushspeedbuff") || ObjectManager.Player.HasBuff("rengarr")))
+                {
+                    Items.UseItem(3142);
+                }
+                if (searchtarget.IsValidTarget(1000) && !ObjectManager.Player.HasBuff("rengarpassivebuff") && !ObjectManager.Player.HasBuff("rengarbushspeedbuff") && !ObjectManager.Player.HasBuff("rengarr"))
+                {
+                    E.Cast(searchtarget);
+                    if (mode == "LANE")
                     {
-                        var targetE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                        if (E.IsReady() && targetE.IsValidTarget() && !targetE.IsZombie)
+                        if ((Q.IsReady() || W.IsReady() || E.IsReady()) && closetarget.Distance(ObjectManager.Player) < Orbwalking.GetRealAutoAttackRange(ObjectManager.Player) + 100)
                         {
-                            E.Cast(targetE);
+                            ObjectManager.Player.IssueOrder(GameObjectOrder.AttackUnit, closetarget);
                         }
-                        foreach (var target in HeroManager.Enemies.Where(x => x.IsValidTarget(E.Range) && !x.IsZombie))
+                    }
+                    if (mode == "TEQ")
+                    {
+                        if (closetarget.Distance(ObjectManager.Player) < Orbwalking.GetRealAutoAttackRange(ObjectManager.Player) + 100)
                         {
-                            if (E.IsReady())
-                                E.Cast(target);
+                            ObjectManager.Player.IssueOrder(GameObjectOrder.AttackUnit, closetarget);
+                        }
+                    }
+                }
+                if (closetarget.IsValidTarget(Q.Range))
+                {
+                    Q.Cast(closetarget);
+                }
+                if (closetarget.IsValidTarget(350))
+                {
+                    E.Cast(closetarget);
+                    W.Cast(closetarget);
+                    if (mode == "LANE")
+                    {
+                        if ((Q.IsReady() || W.IsReady() || E.IsReady()) && closetarget.Distance(ObjectManager.Player) < Orbwalking.GetRealAutoAttackRange(ObjectManager.Player) + 100)
+                        {
+                            ObjectManager.Player.IssueOrder(GameObjectOrder.AttackUnit, closetarget);
+                        }
+                    }
+                    if (mode == "TEQ")
+                    {
+                        if (closetarget.Distance(ObjectManager.Player) < Orbwalking.GetRealAutoAttackRange(ObjectManager.Player) + 100)
+                        {
+                            ObjectManager.Player.IssueOrder(GameObjectOrder.AttackUnit, closetarget);
                         }
                     }
                 }
             }
-            else if (mode == "Sadece Q")
+            if (ObjectManager.Player.Mana == 5)
             {
-                if (Player.Mana < 5)
-                {
-                    if (Q.IsReady() && Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) != 0)
-                    {
-                        if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack() /*&& dontwaitQ*/)
+                if (mode == "LANE")
                         {
-                            Q.Cast();
+                           
+                            if (searchtarget.IsValidTarget(1000) && (ObjectManager.Player.HasBuff("rengarpassivebuff") || ObjectManager.Player.HasBuff("rengarbushspeedbuff") || ObjectManager.Player.HasBuff("rengarr")))
+                            {
+                                Q.Cast();
+                            }
+                            if (searchtarget.IsValidTarget(800) && (ObjectManager.Player.HasBuff("rengarpassivebuff") || ObjectManager.Player.HasBuff("rengarbushspeedbuff") || ObjectManager.Player.HasBuff("rengarr")))
+                            {
+                                Items.UseItem(3142);
+                            }
+                            if (closetarget.IsValidTarget(Q.Range))
+                            {
+                                Q.Cast(closetarget);
+                            }
+                            if (searchtarget.Distance(ObjectManager.Player.Position) > 250 && searchtarget.Distance(ObjectManager.Player.Position) < 1000)
+                            {
+                                E.Cast(searchtarget);
+                            }
+                            if (mode == "LANE")
+                            {
+                                if ((Q.IsReady() || W.IsReady() || E.IsReady()) && closetarget.Distance(ObjectManager.Player) < Orbwalking.GetRealAutoAttackRange(ObjectManager.Player) + 100)
+                                {
+                                    ObjectManager.Player.IssueOrder(GameObjectOrder.AttackUnit, closetarget);
+                                }
+                            }
+                            if (mode == "TEQ")
+                            {
+                                if (closetarget.Distance(ObjectManager.Player) < Orbwalking.GetRealAutoAttackRange(ObjectManager.Player) + 100)
+                                {
+                                    ObjectManager.Player.IssueOrder(GameObjectOrder.AttackUnit, closetarget);
+                                }
+                            }
                         }
-                    }
-                    if (Orbwalking.CanMove(extrawindup))
-                    {
-                        var targetE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                        if (E.IsReady() && targetE.IsValidTarget() && !targetE.IsZombie)
+                    else if (mode == "TEQ")
                         {
-                            E.Cast(targetE);
+                            if (searchtarget.IsValidTarget(800) && (ObjectManager.Player.HasBuff("rengarpassivebuff") || ObjectManager.Player.HasBuff("rengarbushspeedbuff") || ObjectManager.Player.HasBuff("rengarr")))
+                            {
+                                Items.UseItem(3142);
+                            }
+                            if (searchtarget.IsValidTarget(1000) && !ObjectManager.Player.HasBuff("rengarpassivebuff") && !ObjectManager.Player.HasBuff("rengarbushspeedbuff") && !ObjectManager.Player.HasBuff("rengarr"))
+                            {
+                                E.Cast(searchtarget);
+                            }
+                            if (closetarget.IsValidTarget(350))
+                            {
+                                E.Cast(closetarget);
+                            }
+                            if (mode == "LANE")
+                            {
+                                if ((Q.IsReady() || W.IsReady() || E.IsReady()) && closetarget.Distance(ObjectManager.Player) < Orbwalking.GetRealAutoAttackRange(ObjectManager.Player) + 100)
+                                {
+                                    ObjectManager.Player.IssueOrder(GameObjectOrder.AttackUnit, closetarget);
+                                }
+                            }
+                            if (mode == "TEQ")
+                            {
+                                if (closetarget.Distance(ObjectManager.Player) < Orbwalking.GetRealAutoAttackRange(ObjectManager.Player) + 100)
+                                {
+                                    ObjectManager.Player.IssueOrder(GameObjectOrder.AttackUnit, closetarget);
+                                }
+                            }
                         }
-                        foreach (var target in HeroManager.Enemies.Where(x => x.IsValidTarget(E.Range) && !x.IsZombie))
-                        {
-                            if (E.IsReady())
-                                E.Cast(target);
-                        }
-                    }
-                    var targetW = TargetSelector.GetTarget(500, TargetSelector.DamageType.Physical);
-                    if (W.IsReady() && targetW.IsValidTarget() && !targetW.IsZombie)
-                    {
-                        W.Cast(targetW);
-                    }
-                }
-                else
-                {
-                    if (Q.IsReady() && Player.CountEnemiesInRange(Player.AttackRange + Player.BoundingRadius + 100) != 0)
-                    {
-                        if (Orbwalking.CanMove(extrawindup) && !Orbwalking.CanAttack())
-                        {
-                            Q.Cast();
-                        }
-                    }
-                    if (Q.IsReady() && Player.IsDashing())
-                    {
-                        Q.Cast();
-                    }
                 }
             }
-        }
-
         private static void DrawSelectedTarget()
         {
             var target = TargetSelector.GetSelectedTarget();
@@ -396,45 +351,18 @@ namespace Tek_Atan_Rengar
             }
             else
             {
-                if (notifyselected.Text == "null")
+                if (notifyselected.Text == "Yok")
                 {
                     return;
                 }
                 else
                 {
                     Notifications.RemoveNotification(notifyselected);
-                    notifyselected = new Notification("null");
+                    notifyselected = new Notification("Yok");
                     Notifications.AddNotification(notifyselected);
                 }
             }
         }
-        public static bool HasItem()
-        {
-            if (ItemData.Tiamat_Melee_Only.GetItem().IsReady() || ItemData.Ravenous_Hydra_Melee_Only.GetItem().IsReady())
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        public static void CastItem()
-        {
-
-            if (ItemData.Tiamat_Melee_Only.GetItem().IsReady())
-                ItemData.Tiamat_Melee_Only.GetItem().Cast();
-            if (ItemData.Ravenous_Hydra_Melee_Only.GetItem().IsReady())
-                ItemData.Ravenous_Hydra_Melee_Only.GetItem().Cast();
-        }
-
-        public static void CheckAndCastItem()
-        {
-            if (HasItem())
-            {
-                CastItem();
-            }
-        }
-        private static Notification notifyselected = new Notification("null");
+        private static Notification notifyselected = new Notification("Yok");
     }
 }
