@@ -34,12 +34,12 @@ namespace Tek_Atan_Rengar
         private static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
-            Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Obj_AI_Base.OnProcessSpellCast += oncast;
         }
 
-        private static void Drawing_OnDraw(EventArgs args)
+       /*
+	   private static void Drawing_OnDraw(EventArgs args)
         {
             foreach (
                 var enemyVisible in ObjectManager.Get<Obj_AI_Hero>().Where(enemyVisible => enemyVisible.IsValidTarget())
@@ -54,19 +54,22 @@ namespace Tek_Atan_Rengar
                 {
                     Notifications.RemoveNotification(nokil);
                     Notifications.AddNotification(ezkil);
+					return;
                 }
                 else if (PrioDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2.6 > enemyVisible.Health)
                 {
                     Notifications.RemoveNotification(nokil);
                     Notifications.AddNotification(killable);
+					return;
                 }
                 else
                     Notifications.RemoveNotification(ezkil);
                     Notifications.RemoveNotification(killable);
                     Notifications.AddNotification(nokil);
+					return;
             }
         }
-
+*/
         private static void Game_OnGameLoad(EventArgs args)
         {
 
@@ -95,7 +98,6 @@ namespace Tek_Atan_Rengar
             Menu.SubMenu("Otomatik Can").AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(30, 100, 22)));
             Menu.AddToMainMenu();
 
-            Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Obj_AI_Base.OnProcessSpellCast += oncast;
         }
