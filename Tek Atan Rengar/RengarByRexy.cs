@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
 using LeagueSharp.Common.Data;
-using SharpDX;
-using Color = System.Drawing.Color;
 using ItemData = LeagueSharp.Common.Data.ItemData;
 
 namespace Tek_Atan_Rengar
@@ -37,39 +35,6 @@ namespace Tek_Atan_Rengar
             Game.OnUpdate += Game_OnGameUpdate;
             Obj_AI_Base.OnProcessSpellCast += oncast;
         }
-
-       /*
-	   private static void Drawing_OnDraw(EventArgs args)
-        {
-            foreach (
-                var enemyVisible in ObjectManager.Get<Obj_AI_Hero>().Where(enemyVisible => enemyVisible.IsValidTarget())
-                )
-            {
-                var enemyName = enemyVisible.ChampionName;
-                var ezkil = new Notification(enemyName + " : " + "Ez Kill !");
-                var killable = new Notification(enemyName + " : " + "Killable..");
-                var nokil = new Notification("No Kill :(");
-
-                if (PrioDamage(enemyVisible) > enemyVisible.Health)
-                {
-                    Notifications.RemoveNotification(nokil);
-                    Notifications.AddNotification(ezkil);
-					return;
-                }
-                else if (PrioDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2.6 > enemyVisible.Health)
-                {
-                    Notifications.RemoveNotification(nokil);
-                    Notifications.AddNotification(killable);
-					return;
-                }
-                else
-                    Notifications.RemoveNotification(ezkil);
-                    Notifications.RemoveNotification(killable);
-                    Notifications.AddNotification(nokil);
-					return;
-            }
-        }
-*/
         private static void Game_OnGameLoad(EventArgs args)
         {
 
@@ -97,24 +62,10 @@ namespace Tek_Atan_Rengar
             Menu.SubMenu("Combo Modu").AddItem(new MenuItem("eqr", "Menzil Disinda E Kullanma").SetValue(true));
             Menu.SubMenu("Otomatik Can").AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(30, 100, 22)));
             Menu.AddToMainMenu();
-
             Game.OnUpdate += Game_OnGameUpdate;
             Obj_AI_Base.OnProcessSpellCast += oncast;
         }
-        private static float PrioDamage(Obj_AI_Base enemy)
-        {
-            var damage = 0d;
-            var _igniteSlot = Player.GetSpellSlot("SummonerDot");
-            if (_igniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(_igniteSlot) == SpellState.Ready) damage += ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
-            if (Items.HasItem(3077) && Items.CanUseItem(3077)) damage += Player.GetItemDamage(enemy, Damage.DamageItems.Tiamat);
-            if (Items.HasItem(3074) && Items.CanUseItem(3074)) damage += Player.GetItemDamage(enemy, Damage.DamageItems.Hydra);
-            if (Q.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
-            if (Player.Mana == 5 && Q.IsReady()) damage += (Player.GetSpellDamage(enemy, SpellSlot.Q) / 1.5 );
-            if (W.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.W);
-            if (E.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.E);
-            damage += (damage - ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite));
-            return (float)damage;
-        }
+
         public static void Game_OnGameUpdate(EventArgs args)
         {
             if (Player.IsDead) return;
@@ -166,6 +117,11 @@ namespace Tek_Atan_Rengar
                 Items.UseItem(3143);
             }
 
+			if (Player.HasBuff("rengarr"))
+			{
+				return;
+			}
+			
             if (ObjectManager.Player.Mana <= 4)
             {
                 if (searchtarget.IsValidTarget(1000) && (ObjectManager.Player.HasBuff("rengarpassivebuff") || ObjectManager.Player.HasBuff("rengarbushspeedbuff") || ObjectManager.Player.HasBuff("rengarr")))
