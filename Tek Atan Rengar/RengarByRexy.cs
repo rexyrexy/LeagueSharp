@@ -36,6 +36,7 @@ namespace Tek_Atan_Rengar
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
+            Obj_AI_Base.OnProcessSpellCast += oncast;
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -44,53 +45,27 @@ namespace Tek_Atan_Rengar
                 var enemyVisible in ObjectManager.Get<Obj_AI_Hero>().Where(enemyVisible => enemyVisible.IsValidTarget())
                 )
             {
-                if (Player.HasBuff("rengarr") && PrioDamage(enemyVisible) > enemyVisible.Health)
-                {
-                    Drawing.DrawText(
-                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
-                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
-                        Color.Red,
-                        "Ulti Combo TEQ");
-                }
-                else if (Player.HasBuff("rengarr") && PrioDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2 > enemyVisible.Health)
-                {
-                    Drawing.DrawText(
-                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
-                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
-                        Color.DarkOrange,
-                        "Ulti Combo KILL");
-                }
+                var enemyName = enemyVisible.ChampionName;
+                var ezkil = new Notification(enemyName + " : " + "Ez Kill !");
+                var killable = new Notification(enemyName + " : " + "Killable..");
+                var nokil = new Notification("No Kill :(");
 
-                else if (Player.HasBuff("rengarr") && PrioDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 3.65 > enemyVisible.Health)
+                if (PrioDamage(enemyVisible) > enemyVisible.Health)
                 {
-                    Drawing.DrawText(
-                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
-                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
-                        Color.DarkCyan,
-                        "Ulti Combo Orta KILL");
+                    Notifications.RemoveNotification(nokil);
+                    Notifications.RemoveNotification(killable);
+                    Notifications.AddNotification(ezkil);
                 }
-                if (ComboDamage(enemyVisible) > enemyVisible.Health && !Player.HasBuff("rengarr"))
+                else if (PrioDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2.6 > enemyVisible.Health)
                 {
-                    Drawing.DrawText(
-                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
-                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
-                        Color.Red,
-                        "Direk Combo");
-                }
-                else if (ComboDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2.6 > enemyVisible.Health && !Player.HasBuff("rengarr"))
-                {
-                    Drawing.DrawText(
-                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
-                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
-                        Color.DarkOrange,
-                        "Combo + Tiamat = Teq");
+                    Notifications.RemoveNotification(nokil);
+                    Notifications.RemoveNotification(ezkil);
+                    Notifications.AddNotification(killable);
                 }
                 else
-                    Drawing.DrawText(
-                        Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
-                        Drawing.WorldToScreen(enemyVisible.Position)[1] - 40,
-                        Color.Green,
-                        "Alamazsin");
+                    Notifications.RemoveNotification(ezkil);
+                    Notifications.RemoveNotification(killable);
+                    Notifications.AddNotification(nokil);
             }
         }
 
@@ -112,7 +87,7 @@ namespace Tek_Atan_Rengar
             E.MinHitChance = HitChance.Medium;
 
             Notifications.AddNotification(string.Format("Tek Atan Rengar Yuklendi !"), 10500);
-            Notifications.AddNotification(string.Format("Coded by Rexy-"), 10500);
+            Notifications.AddNotification(string.Format("Coded by Rexy"), 10500);
             Menu = new Menu("Tek Atan Rengar", "Tek Atan Rengar", true);
             var orbwalkerMenu = new Menu("Orbwalker", "Orbwalker");
             orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
@@ -120,30 +95,12 @@ namespace Tek_Atan_Rengar
             Menu.SubMenu("Combo Modu").AddItem(new MenuItem("ComboMode", "Combo Modu").SetValue(new StringList(new[] { "TEQ", "LANE" })));
             Menu.SubMenu("Combo Modu").AddItem(new MenuItem("eqr", "Menzil Disinda E Kullanma").SetValue(true));
             Menu.SubMenu("Otomatik Can").AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(30, 100, 22)));
-            var kıredit = new Menu("Coded by Rexy", "Coded by Rexy");
-            Menu.AddSubMenu(kıredit);
             Menu.AddToMainMenu();
-            
+
+            Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Obj_AI_Base.OnProcessSpellCast += oncast;
         }
-
-        #region ComboDamage
-
-        private static float ComboDamage(Obj_AI_Base enemy)
-        {
-            var damage = 0d;
-            var _igniteSlot = Player.GetSpellSlot("SummonerDot");
-            if (_igniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(_igniteSlot) == SpellState.Ready) damage += ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
-            if (Items.HasItem(3077) && Items.CanUseItem(3077)) damage += Player.GetItemDamage(enemy, Damage.DamageItems.Tiamat);
-            if (Items.HasItem(3074) && Items.CanUseItem(3074)) damage += Player.GetItemDamage(enemy, Damage.DamageItems.Hydra);
-            if (Q.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
-            if (W.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.W);
-            if (E.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.E);
-            damage += (damage - ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite));
-            return (float)damage;
-        }
-        #endregion
         private static float PrioDamage(Obj_AI_Base enemy)
         {
             var damage = 0d;
@@ -152,7 +109,7 @@ namespace Tek_Atan_Rengar
             if (Items.HasItem(3077) && Items.CanUseItem(3077)) damage += Player.GetItemDamage(enemy, Damage.DamageItems.Tiamat);
             if (Items.HasItem(3074) && Items.CanUseItem(3074)) damage += Player.GetItemDamage(enemy, Damage.DamageItems.Hydra);
             if (Q.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
-            if (Q.IsReady()) damage += (Player.GetSpellDamage(enemy, SpellSlot.Q) / 1.5 );
+            if (Player.Mana == 5 && Q.IsReady()) damage += (Player.GetSpellDamage(enemy, SpellSlot.Q) / 1.5 );
             if (W.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.W);
             if (E.IsReady()) damage += Player.GetSpellDamage(enemy, SpellSlot.E);
             damage += (damage - ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite));
@@ -163,8 +120,6 @@ namespace Tek_Atan_Rengar
             if (Player.IsDead) return;
 
             var hp = Menu.Item("autoheal").GetValue<Slider>().Value;
-
-            DrawSelectedTarget();
 
             if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
@@ -331,8 +286,7 @@ namespace Tek_Atan_Rengar
                         }
                 }
             }
-        private static void DrawSelectedTarget()
-        {
+            /*
             var target = TargetSelector.GetSelectedTarget();
             if (target != null)
             {
@@ -362,5 +316,6 @@ namespace Tek_Atan_Rengar
             }
         }
         private static Notification notifyselected = new Notification("Yok");
+    */
     }
 }
