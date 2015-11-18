@@ -53,13 +53,11 @@ namespace Tek_Atan_Rengar
                 if (PrioDamage(enemyVisible) > enemyVisible.Health)
                 {
                     Notifications.RemoveNotification(nokil);
-                    Notifications.RemoveNotification(killable);
                     Notifications.AddNotification(ezkil);
                 }
                 else if (PrioDamage(enemyVisible) + Player.GetAutoAttackDamage(enemyVisible, true) * 2.6 > enemyVisible.Health)
                 {
                     Notifications.RemoveNotification(nokil);
-                    Notifications.RemoveNotification(ezkil);
                     Notifications.AddNotification(killable);
                 }
                 else
