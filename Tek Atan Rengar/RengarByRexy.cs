@@ -117,12 +117,9 @@ namespace Tek_Atan_Rengar
             var orbwalkerMenu = new Menu("Orbwalker", "Orbwalker");
             orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
             Menu.AddSubMenu(orbwalkerMenu);
-            Menu.SubMenu("Combo Modu")
-                .AddItem(
-                    new MenuItem("ComboMode", "Combo Modu").SetValue(
-                        new StringList(new[] { "TEQ", "LANE" })));
-            Menu.SubMenu("Otomatik Can")
-                .AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(30, 100, 22)));
+            Menu.SubMenu("Combo Modu").AddItem(new MenuItem("ComboMode", "Combo Modu").SetValue(new StringList(new[] { "TEQ", "LANE" })));
+            Menu.SubMenu("Combo Modu").AddItem(new MenuItem("eqr", "Menzil Disinda E Kullanma").SetValue(true));
+            Menu.SubMenu("Otomatik Can").AddItem(new MenuItem("autoheal", "Otomatik Can Icin Yuzde").SetValue(new Slider(30, 100, 22)));
             var kıredit = new Menu("Coded by Rexy", "Coded by Rexy");
             Menu.AddSubMenu(kıredit);
             Menu.AddToMainMenu();
@@ -268,6 +265,7 @@ namespace Tek_Atan_Rengar
             }
             if (ObjectManager.Player.Mana == 5)
             {
+                var eqq = Menu.Item("eqr").GetValue<bool>();
                 if (mode == "LANE")
                         {
                            
@@ -283,7 +281,7 @@ namespace Tek_Atan_Rengar
                             {
                                 Q.Cast(closetarget);
                             }
-                            if (searchtarget.Distance(ObjectManager.Player.Position) > 250 && searchtarget.Distance(ObjectManager.Player.Position) < 1000)
+                            if (eqq && searchtarget.Distance(ObjectManager.Player.Position) > 250 && searchtarget.Distance(ObjectManager.Player.Position) < 1000)
                             {
                                 E.Cast(searchtarget);
                             }
